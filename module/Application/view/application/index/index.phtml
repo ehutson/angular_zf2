@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en" ng-app="application">
+    <head>
+        <meta charset="utf-8">
+        <title>Angular REST Table / CRUD Test</title>
+        
+        <?= $this->headLink()->appendStylesheet($this->basePath() . '/css/bootstrap.min.css')
+                             ->appendStylesheet($this->basePath() . '/css/application.css')
+                             ->appendStylesheet($this->basePath() . '/css/style.css')
+                             ->appendStylesheet($this->basePath() . '/css/bootstrap-responsive.min.css'); ?>
+    </head>
+    <body>
+        <div ng-view></div>
+
+    <?php
+    echo $this->inlineScript()->appendFile($this->basePath() .'/lib/angular.js')
+            ->appendFile($this->basePath() . '/lib/angular-resource.js')
+            ->appendFile($this->basePath() . '/application/application.js');
+    ?>
+    
+    <!-- In production use:
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.2/angular.min.js"></script>
+    
+    <script src="lib/angular.js"></script>
+    <script src="application/application.js"></script>
+    <script src="application/configuration-constants.js"></script>
+    <script src="menu/menu-service.js"></script>
+    <script src="details/details-controller.js"></script>
+    <script src="error/error-controller.js"></script>
+    <script src="menu/menu-controller.js"></script>
+    <script src="menu/menu-item-directive.js"></script>
+    <script src="date-time/to-date-string-filter.js"></script>
+    -->
+</body>
+</html>

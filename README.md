@@ -1,4 +1,3 @@
-angular_zf2
-===========
+AngularJS with ZF2 Restful Backend
+==================================
 
-Test Angular JS with ZF2 backend

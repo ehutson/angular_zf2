@@ -39,7 +39,7 @@ class ApiController extends AbstractRestfulController
             $post->setBody($data['body']);
             $em->persist($post);
             $em->flush();
-            return new JsonModel(array('success' => true, 'data'    => $post->toArray()));
+            return new JsonModel($post->toArray());
         } catch (Exception $e) {
             return $this->returnError($e);
         }
@@ -52,6 +52,7 @@ class ApiController extends AbstractRestfulController
             $post = $em->find('Application\Entity\Post', $id);
             if ($post) {
                 $em->remove($post);
+                $em->flush();
             } else {
                 throw new Exception('Unable to find post with id ' . $id);
             }
@@ -67,7 +68,7 @@ class ApiController extends AbstractRestfulController
             $em   = $this->getEntityManager();
             $post = $em->find('Application\Entity\Post', $id);
             if ($post) {
-                return new JsonModel(array('success' => true, 'data'    => $post->toArray()));
+                return new JsonModel($post->toArray());
             } else {
                 throw new Exception('Unable to find post with id ' . $id);
             }

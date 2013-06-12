@@ -1,0 +1,23 @@
+<div class="container">
+    <h1>{{title}}</h1>
+
+    <form name="form" class="form-horizontal">
+        <div class="control-group" data-ng-class="{error: form.Title.$invalid}">
+            <label class="control-label" for="Title">Post Title</label>
+            <div class="controls">
+                <input type="text" data-ng-model="postItem.title" id="Title" />
+            </div>
+        </div>
+        <div class="control-group" data-ng-class="{error: form.Body.$invalid}">
+            <label class="control-label" for="Body">Post Body</label>
+            <div class="controls">
+                <textarea data-ng-model="postItem.body" id="Body"></textarea>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" data-ng-click="save()">Submit</button>
+            <a href="#/" class="btn">Cancel</a>
+        </div>
+    </form>
+
+</div>

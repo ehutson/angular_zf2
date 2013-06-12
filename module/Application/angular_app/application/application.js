@@ -7,6 +7,14 @@ app.config(function($routeProvider) {
         templateUrl: 'application/list.html',
         controller: 'ListController'
     });
+    $routeProvider.when('/new', {
+        templateUrl: 'application/detail.html',
+        controller: 'CreateController'
+    });
+    $routeProvider.when('/edit/:postId', {
+        templateUrl: 'application/detail.html',
+        controller: 'EditController'
+    });
     $routeProvider.otherwise({redirectTo: '/'});
 });
 
@@ -34,6 +42,25 @@ app.factory('PostItem', function($resource) {
     return $resource('/AngularTable/public/api/:id', {id: '@id'}, {update: {method: 'PUT'}, query: {method: 'GET', isArray: false}});
 });
 
+app.controller('CreateController', function($scope, $location, PostItem) {
+    $scope.title = "Adding new Post";
+    $scope.save = function() {
+        PostItem.save($scope.postItem, function() {
+            $location.path('/');
+        });
+    };
+});
+
+app.controller('EditController', function($scope, $location, $routeParams, PostItem) {
+    $scope.postItem = PostItem.get({id: $routeParams.postId});
+    $scope.title = "Editing Post";
+
+    $scope.save = function() {
+        PostItem.update({id: $scope.postItem.id}, $scope.postItem, function() {
+            $location.path('/');
+        });
+    };
+});
 
 app.controller('ListController', function($scope, $location, PostItem) {
     $scope.title = "Posts";
@@ -46,8 +73,15 @@ app.controller('ListController', function($scope, $location, PostItem) {
     $scope.page_number = 1;
     $scope.total_count = 0;
 
+    $scope.delete = function() {
+        var postId = this.post.id;
+        PostItem.delete({id: postId}, function() {
+            $("#post_" + postId).fadeOut();
+        });
+    };
+
     $scope.search = function() {
-        PostItem.query({q: $scope.query, size: $scope.page_size, page: $scope.page_number, 
+        PostItem.query({q: $scope.query, size: $scope.page_size, page: $scope.page_number,
             sort_order: $scope.sort_order, sort_desc: $scope.sort_desc}, function(posts) {
             $scope.posts = posts.data;
             $scope.total_count = posts.count;

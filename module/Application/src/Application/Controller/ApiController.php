@@ -5,6 +5,7 @@ namespace Application\Controller;
 use Zend\Mvc\Controller\AbstractRestfulController;
 use Zend\View\Model\JsonModel;
 use DoctrineORMModule\Paginator\Adapter\DoctrinePaginator as DoctrineAdapter;
+use DoctrineModule\Stdlib\Hydrator\DoctrineObject;
 use Doctrine\ORM\Tools\Pagination\Paginator as ORMPaginator;
 use Zend\Paginator\Paginator;
 use Application\Entity\Post;
@@ -16,12 +17,12 @@ class ApiController extends AbstractRestfulController
     public function create($data)
     {
         try {
-            $post = new Post();
-            $post->setTitle($data['title']);
-            $post->setBody($data['body']);
-            $this->getEntityManager()->persist($post);
-            $this->getEntityManager()->flush();
-            return new JsonModel(array('success' => true, 'data'    => $post->toArray()));
+            $em = $this->getEntityManager();
+            $hydrator = $this->getHydrator();
+            $post = $hydrator->hydrate($data, new Post());
+            $em->persist($post);
+            $em->flush();
+            return new JsonModel(array('success' => true, 'data' => $hydrator->extract($post)));
         } catch (Exception $e) {
             return $this->returnError($e);
         }
@@ -30,16 +31,16 @@ class ApiController extends AbstractRestfulController
     public function update($id, $data)
     {
         try {
-            $em   = $this->getEntityManager();
+            $em = $this->getEntityManager();
             $post = $em->find('Application\Entity\Post', $id);
             if (!$post) {
                 throw new Exception('Unable to find post with id ' . $id);
             }
-            $post->setTitle($data['title']);
-            $post->setBody($data['body']);
+            $hydrator = $this->getHydrator();
+            $post = $hydrator->hydrate($data, $post);
             $em->persist($post);
             $em->flush();
-            return new JsonModel($post->toArray());
+            return new JsonModel($hydrator->extract($post));
         } catch (Exception $e) {
             return $this->returnError($e);
         }
@@ -48,7 +49,7 @@ class ApiController extends AbstractRestfulController
     public function delete($id)
     {
         try {
-            $em   = $this->getEntityManager();
+            $em = $this->getEntityManager();
             $post = $em->find('Application\Entity\Post', $id);
             if ($post) {
                 $em->remove($post);
@@ -65,10 +66,11 @@ class ApiController extends AbstractRestfulController
     public function get($id)
     {
         try {
-            $em   = $this->getEntityManager();
+            $em = $this->getEntityManager();
             $post = $em->find('Application\Entity\Post', $id);
             if ($post) {
-                return new JsonModel($post->toArray());
+                $hydrator = $this->getHydrator();
+                return new JsonModel($hydrator->extract($post));
             } else {
                 throw new Exception('Unable to find post with id ' . $id);
             }
@@ -80,12 +82,12 @@ class ApiController extends AbstractRestfulController
     public function getList()
     {
         try {
-            $q         = $this->params()->fromQuery('q');
-            $page      = (int) $this->params()->fromQuery('page', 1);
-            $size      = (int) $this->params()->fromQuery('size', 15);
+            $q = $this->params()->fromQuery('q');
+            $page = (int) $this->params()->fromQuery('page', 1);
+            $size = (int) $this->params()->fromQuery('size', 15);
             $sortOrder = $this->params()->fromQuery('sort_order', 'title');
-            $sortDesc  = $this->params()->fromQuery('sort_desc', 'false');
-            $desc      = 'ASC';
+            $sortDesc = $this->params()->fromQuery('sort_desc', 'false');
+            $desc = 'ASC';
             if ($sortDesc == 'true') {
                 $desc = 'DESC';
             }
@@ -104,7 +106,7 @@ class ApiController extends AbstractRestfulController
                 $qb->setParameter('q', "%%{$q}%%");
             }
 
-            $adapter   = new DoctrineAdapter(new ORMPaginator($qb));
+            $adapter = new DoctrineAdapter(new ORMPaginator($qb));
             $paginator = new Paginator($adapter);
             $paginator->setItemCountPerPage($size);
             $paginator->setCurrentPageNumber($page);
@@ -112,19 +114,19 @@ class ApiController extends AbstractRestfulController
             $sql = $qb->getQuery()->getSQL();
 
             $results = array();
-            $data    = $paginator->getCurrentItems();
+            $data = $paginator->getCurrentItems();
+            $hydrator = $this->getHydrator();
             foreach ($data as $d) {
-                $results[] = $d->toArray();
+                $results[] = $hydrator->extract($d);
             }
             $totalCount = $paginator->getTotalItemCount();
 
             return new JsonModel(array('success' => true,
-                'sql'     => $sql,
-                'count'   => $totalCount,
-                'page'    => $page,
-                'size'    => $size,
-                'data'    => $results));
-            //return new JsonModel(array('data' => $results));
+                'sql' => $sql,
+                'count' => $totalCount,
+                'page' => $page,
+                'size' => $size,
+                'data' => $results));
         } catch (Exception $e) {
             return $this->returnError($e);
         }
@@ -140,10 +142,16 @@ class ApiController extends AbstractRestfulController
         return $em;
     }
 
+    protected function getHydrator($entity = 'Application\Entity\Post')
+    {
+        $hydrator = new DoctrineObject($this->getEntityManager(), $entity);
+        return $hydrator;
+    }
+
     protected function returnError(Exception $e)
     {
         $this->getResponse()->setStatusCode(400);
-        $this->getResponse()->setContent(json_encode(array('success' => false, 'errors'  => array($e->getMessage()))));
+        $this->getResponse()->setContent(json_encode(array('success' => false, 'errors' => array($e->getMessage()))));
         return $this->getResponse();
     }
 

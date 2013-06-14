@@ -44,7 +44,7 @@ class Post
     public function __construct($title = "", $body = "")
     {
         $this->title = $title;
-        $this->body  = $body;
+        $this->body = $body;
     }
 
     public function setTitle($title)
@@ -86,11 +86,6 @@ class Post
     public function getUpdated()
     {
         return $this->updated;
-    }
-
-    public function toArray()
-    {
-        return get_object_vars($this);
     }
 
 }
